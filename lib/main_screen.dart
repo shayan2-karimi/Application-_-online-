@@ -1,12 +1,79 @@
+// ignore_for_file: must_be_immutable
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:online_app/Model/currency.dart';
 import 'package:online_app/myColors.dart';
+import 'package:http/http.dart' as httpme;
+import 'dart:convert' as convertme;
 
-class MainScreen extends StatelessWidget {
+class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
   @override
+  State<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends State<MainScreen> {
+  List<Currency> myCurrency = [];
+
+  Future getResponse() async {
+    var urlCustom =
+        "https://sasansafari.com/flutter/api.php?access_key=flutter123456";
+    var myValue = await httpme.get(Uri.parse(urlCustom));
+    if (myValue.statusCode == 200) {
+      print((myValue.statusCode));
+      List myJson = convertme.jsonDecode(myValue.body);
+      if (myCurrency.isEmpty) {
+        if (myJson.isNotEmpty) {
+          for (int s = 0; s < myJson.length; s++) {
+            setState(() {
+              myCurrency.add(
+                Currency(
+                  changes: myJson[s]['changes'],
+                  id: myJson[s]['id'],
+                  title: myJson[s]['title'],
+                  price: myJson[s]['price'],
+                  status: myJson[s]['status'],
+                ),
+              );
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // getResponse() {
+  //   var url =
+  //       'https://sasansafari.com/flutter/api.php?access_key=flutter123456';
+  //   httpme.get(Uri.parse(url)).then((value) {
+  //     if (value.statusCode == 200) {
+  //       List dataJsonList = convertme.jsonDecode(value.body);
+  //       if (myCurrency.isEmpty) {
+  //         if (dataJsonList.isNotEmpty) {
+  //           for (int i = 0; i < dataJsonList.length; i++) {
+  //             setState(() {
+  //               myCurrency.add(
+  //                 Currency(
+  //                   id: dataJsonList[i]['id'],
+  //                   title: dataJsonList[i]['title'],
+  //                   price: dataJsonList[i]['price'],
+  //                   changes: dataJsonList[i]['changes'],
+  //                   status: dataJsonList[i]['status'],
+  //                 ),
+  //               );
+  //             });
+  //           }
+  //         }
+  //       }
+  //     }
+  //   });
+  // }
+
+  @override
   Widget build(BuildContext context) {
+    getResponse();
     var textThemeCustom = Theme.of(context).textTheme;
     return SafeArea(
       child: Scaffold(
@@ -43,14 +110,14 @@ class MainScreen extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  Image.asset('assets/icons/752675.png'),
+                  const SizedBox(
+                    width: 8,
+                  ),
                   Text(
                     'نرخ ارز آزاد چیست؟',
                     style: textThemeCustom.bodyLarge,
                   ),
-                  const SizedBox(
-                    width: 8,
-                  ),
-                  Image.asset('assets/icons/752675.png'),
                 ],
               ),
             ),
@@ -81,11 +148,11 @@ class MainScreen extends StatelessWidget {
                         style: textThemeCustom.displayMedium,
                       ),
                       Text(
-                        'تغییر',
+                        'قیمت',
                         style: textThemeCustom.displayMedium,
                       ),
                       Text(
-                        'قیمت',
+                        'تغییر',
                         style: textThemeCustom.displayMedium,
                       ),
                     ],
@@ -98,10 +165,14 @@ class MainScreen extends StatelessWidget {
               width: double.infinity,
               child: ListView.separated(
                 scrollDirection: Axis.vertical,
-                itemCount: 20,
+                itemCount: myCurrency.length,
                 physics: const BouncingScrollPhysics(),
-                itemBuilder: (context, postion) {
-                  return _ItemList(textThemeCustom: textThemeCustom);
+                itemBuilder: (BuildContext context, int postion) {
+                  return ItemList(
+                    textThemeCustom: textThemeCustom,
+                    position: postion,
+                    myCurrency: myCurrency,
+                  );
                 },
                 separatorBuilder: (context, index) {
                   if (index % 9 == 0) {
@@ -172,9 +243,15 @@ class MainScreen extends StatelessWidget {
   }
 }
 
-class _ItemList extends StatelessWidget {
-  const _ItemList({
+class ItemList extends StatelessWidget {
+  int position;
+  List<Currency> myCurrency = [];
+
+  ItemList({
+    super.key,
     required this.textThemeCustom,
+    required this.position,
+    required this.myCurrency,
   });
 
   final TextTheme textThemeCustom;
@@ -196,16 +273,18 @@ class _ItemList extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'دلار',
+                myCurrency[position].title!,
                 style: textThemeCustom.displaySmall,
               ),
               Text(
-                '70000',
+                myCurrency[position].price!,
                 style: textThemeCustom.displaySmall,
               ),
               Text(
-                '-7',
-                style: textThemeCustom.displaySmall,
+                myCurrency[position].changes!,
+                style: myCurrency[position].status == "p"
+                    ? textThemeCustom.bodyMedium
+                    : textThemeCustom.bodyMedium!.copyWith(color: Colors.red),
               ),
             ],
           ),

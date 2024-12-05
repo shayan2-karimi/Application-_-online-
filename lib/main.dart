@@ -66,6 +66,12 @@ class MyApp extends StatelessWidget {
             fontWeight: FontWeight.w500,
             color: Colors.black,
           ),
+          bodyMedium: TextStyle(
+            fontFamily: 'Ubuntu',
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: Colors.green,
+          ),
         ),
       ),
       home: const MainScreen(),
